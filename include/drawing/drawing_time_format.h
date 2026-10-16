@@ -13,6 +13,10 @@
  * @brief Time components (simplifies function signatures)
  */
 typedef struct {
+    int year;
+    int month;
+    int day;
+    int wday;
     int hours;
     int minutes;
     int seconds;

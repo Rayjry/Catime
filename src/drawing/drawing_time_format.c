@@ -17,6 +17,7 @@ extern int GetElapsedCentiseconds(void);
 extern int GetSystemCentiseconds(void);
 
 #define DRAWING_MS_PER_SECOND 1000LL
+const wchar_t* WEEKDAYS[] = {L"Sun", L"Mon", L"Tue", L"Wed", L"Thu", L"Fri", L"Sat"};
 
 static int ClampMillisecondsToSecondsFloor(int64_t milliseconds) {
     int64_t seconds;
@@ -43,6 +44,10 @@ TimeComponents GetCurrentTimeComponents(BOOL use24Hour) {
     int centiseconds = st.wMilliseconds / 10;
 
     TimeComponents tc;
+    tc.year = st.wYear;
+    tc.month = st.wMonth;
+    tc.day = st.wDay;
+    tc.wday = st.wDayOfWeek;
     tc.hours = st.wHour;
     tc.minutes = st.wMinute;
     tc.seconds = st.wSecond;
@@ -231,43 +236,20 @@ void GetTimeText(wchar_t* buffer, size_t bufferSize) {
 
     if (CLOCK_SHOW_CURRENT_TIME) {
         TimeComponents tc = GetCurrentTimeComponents(GetActiveUse24Hour());
-
-        if (finalShowSeconds) {
-            /** Current time always shows hours (even if 0 in 24-hour mode) */
-            if (finalShowMs) {
-                if (finalFormat == TIME_FORMAT_ZERO_PADDED || finalFormat == TIME_FORMAT_FULL_PADDED) {
-                    _snwprintf_s(buffer, bufferSize, _TRUNCATE, L"%02d:%02d:%02d.%02d",
-                            tc.hours, tc.minutes, tc.seconds, tc.centiseconds);
-                } else {
-                    _snwprintf_s(buffer, bufferSize, _TRUNCATE, L"%d:%02d:%02d.%02d",
-                            tc.hours, tc.minutes, tc.seconds, tc.centiseconds);
+        if (finalShowMs) {
+            _snwprintf_s(buffer, bufferSize, _TRUNCATE, L"%02d:%02d:%02d.%02d\n%04d/%02d/%02d %s",
+                tc.hours, tc.minutes, tc.seconds, tc.centiseconds, 
+                tc.year, tc.month, tc.day, WEEKDAYS[tc.wday]);
+        }else{
+                if (finalShowSeconds){
+                    _snwprintf_s(buffer, bufferSize, _TRUNCATE, L"%02d:%02d:%02d\n%04d/%02d/%02d %s",
+                        tc.hours, tc.minutes, tc.seconds,
+                        tc.year, tc.month, tc.day, WEEKDAYS[tc.wday]);
+                }else{
+                    _snwprintf_s(buffer, bufferSize, _TRUNCATE, L"%02d:%02d\n%04d/%02d/%02d %s",
+                    tc.hours, tc.minutes,
+                    tc.year, tc.month, tc.day, WEEKDAYS[tc.wday]);
                 }
-            } else {
-                if (finalFormat == TIME_FORMAT_ZERO_PADDED || finalFormat == TIME_FORMAT_FULL_PADDED) {
-                    _snwprintf_s(buffer, bufferSize, _TRUNCATE, L"%02d:%02d:%02d",
-                            tc.hours, tc.minutes, tc.seconds);
-                } else {
-                    _snwprintf_s(buffer, bufferSize, _TRUNCATE, L"%d:%02d:%02d",
-                            tc.hours, tc.minutes, tc.seconds);
-                }
-            }
-        } else {
-            /** Milliseconds override seconds hiding */
-            if (finalShowMs) {
-                if (finalFormat == TIME_FORMAT_ZERO_PADDED || finalFormat == TIME_FORMAT_FULL_PADDED) {
-                    _snwprintf_s(buffer, bufferSize, _TRUNCATE, L"%02d:%02d:%02d.%02d",
-                            tc.hours, tc.minutes, tc.seconds, tc.centiseconds);
-                } else {
-                    _snwprintf_s(buffer, bufferSize, _TRUNCATE, L"%d:%02d:%02d.%02d",
-                            tc.hours, tc.minutes, tc.seconds, tc.centiseconds);
-                }
-            } else {
-                if (finalFormat == TIME_FORMAT_ZERO_PADDED || finalFormat == TIME_FORMAT_FULL_PADDED) {
-                    _snwprintf_s(buffer, bufferSize, _TRUNCATE, L"%02d:%02d", tc.hours, tc.minutes);
-                } else {
-                    _snwprintf_s(buffer, bufferSize, _TRUNCATE, L"%d:%02d", tc.hours, tc.minutes);
-                }
-            }
         }
     } else if (CLOCK_COUNT_UP) {
         TimeComponents tc = GetCountUpComponents();
